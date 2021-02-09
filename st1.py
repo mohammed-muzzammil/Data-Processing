@@ -66,7 +66,7 @@ unsafe_allow_html=True
 # Enter the path here where all the temporary files will be stored
 temp='\\temp.csv'
 temp1='\\temp1.csv'
-os.chdir(r'C:\Users\MOHAMMED MUZZAMMIL\Desktop\streamlit')
+#os.chdir(r'C:\Users\MOHAMMED MUZZAMMIL\Desktop\streamlit')
 path=os.getcwd()
 path1=os.getcwd()
 path=path+temp
