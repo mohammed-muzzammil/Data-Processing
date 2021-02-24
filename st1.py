@@ -5,11 +5,12 @@ import xlrd
 import xlsxwriter
 from sklearn.impute import SimpleImputer
 from sklearn.impute import KNNImputer
+from sklearn import datasets, neighbors
 import base64
 from io import BytesIO
 import cx_Oracle
 import re
-import smtplib
+#import smtplib
 import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -33,7 +34,15 @@ from sklearn.preprocessing import MaxAbsScaler
 
 from sklearn.preprocessing import RobustScaler
 
+import pickle
 
+#from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import cross_val_score
+from collections import Counter
+from sklearn.metrics import accuracy_score
+from sklearn import model_selection
 
 
 
@@ -43,6 +52,8 @@ from sklearn.preprocessing import RobustScaler
 # Headings
 
 st.set_option('deprecation.showfileUploaderEncoding', False)
+
+st.set_option('deprecation.showPyplotGlobalUse', False)
 
 st.markdown("<h1 style='text-align: center; color: Light gray;'>Data Processing App</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align: center; color: Light gray;'>from Omega to Alpha </h3>", unsafe_allow_html=True)
@@ -72,14 +83,6 @@ path1=os.getcwd()
 path=path+temp
 path1=path1+temp1
 #path=(r"C:\Users\MOHAMMED MUZZAMMIL\Desktop\streamlit\temp.csv")
-
-
-
-
-
-
-
-
 
 
 
@@ -170,11 +173,31 @@ def get_table_download_link_xlsx(df):
         b64 = base64.b64encode(val)  # val looks like b'...'
         return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download="dataprep.xlsx">Download xlsx file</a>' # decode b'abc' => abc
     
+
+    
+    
+    
     
     
     except Exception as e:
         st.write("Oops!", e.__class__, "occurred.")
         return df
+
+
+    
+    
+    
+def get_binary_file_downloader_html(bin_file, file_label='File'):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    bin_str = base64.b64encode(data).decode()
+    href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(bin_file)}">Download {file_label}</a>'
+    return href
+
+
+
+
+
 
 
     
@@ -436,10 +459,7 @@ def maxabs(df):
     
     
         
-        
-        
-
-    
+ 
     
     
 
@@ -464,6 +484,7 @@ def mvt_options(df):
                 df = pd.read_csv(path)
                 df=mvt_mean(df)
                 df.to_csv(path, index=False)
+                df.to_csv(path1, index=False)
                 return df
                 #st.markdown(get_table_download_link(df), unsafe_allow_html=True)
 
@@ -473,6 +494,7 @@ def mvt_options(df):
                 df = pd.read_csv(path)
                 df=mvt_mode(df)
                 df.to_csv(path, index=False)
+                df.to_csv(path1, index=False)
                 return df
 
 
@@ -487,6 +509,7 @@ def mvt_options(df):
                 df = pd.read_csv(path)
                 df=mvt_median(df)
                 df.to_csv(path, index=False)
+                df.to_csv(path1, index=False)
                 return df
 
 
@@ -499,8 +522,11 @@ def mvt_options(df):
                 df = pd.read_csv(path)
                 df=mvt_knn(df)
                 df.to_csv(path, index=False)
+                df.to_csv(path1, index=False)
                 return df
             
+            
+
     
     except Exception as e:
         st.write("Oops!", e.__class__, "occurred.")
@@ -518,30 +544,33 @@ def outlier_function():
         o_f_selection = st.sidebar.radio("Choose a Outlier Treatment Method",option_o)
         if o_f_selection == "IQR":
             df = pd.read_csv(path)
-            column_name=st.text_input("Enter the name of Column fom which outlier will be removed")
-            st.info("You can find the list of columns below")
-            st.write(df.columns)
+            column_name=st.selectbox("Please Choose a column from which the outlier will be removed",df.columns)
+            #st.info("You can find the list of columns below")
+            #st.write(df.columns)
             if st.sidebar.button("Process IQR"):
                 df = pd.read_csv(path)
                 if column_name in df.columns:
 
                     df=ot_iqr(df,column_name)
                     df.to_csv(path, index=False)
+                    df.to_csv(path1, index=False)
                     return df
                 else:
                     st.info("This Column Name is Not Present")
 
         elif o_f_selection == "Z-Score":
-            column_name=st.text_input("Enter the name of Column fom which outlier will be removed")
-            st.info("You can find the list of columns below")
+            
+           # st.info("You can find the list of columns below")
             df = pd.read_csv(path)
-            st.write(df.columns)
+            column_name=st.selectbox("Please Choose a column from which the outlier will be removed",df.columns)
+            #st.write(df.columns)
             if st.sidebar.button("Process Z-Score"):
                 df = pd.read_csv(path)
                 if column_name in df.columns:
 
                     df=z_score(df,column_name)
                     df.to_csv(path, index=False)
+                    df.to_csv(path1, index=False)
                     return df
                 else:
                     st.info("This Column Name is Not Present")
@@ -765,6 +794,8 @@ def file_upload():
 
 
             if st.button("Connect"):
+                
+               # muzzammil/123@46:99/ORCL
 
 
                 con_query="{}/{}@{}:{}/ORCL".format(user,passwd,host,port)
@@ -868,16 +899,19 @@ def eda(df):
     if eda_select == 'Pair plot':    
             
         
-        hue = st.text_input('Please Specify a hue')
+        
         
         df=pd.read_csv(path)
+        
+        hue = st.selectbox("Please specify a hue",df.columns)
 
-        st.write(df.columns)
+        #st.write(df.columns)
 
         if st.sidebar.button('Visualize'):
 
             fig = plt.figure()
-            fig=sns.pairplot(df,hue=hue) 
+            fig=sns.pairplot(df,hue=hue)
+            #st.plotly_chart(fig)
             st.pyplot(fig)
             return 
         
@@ -887,11 +921,12 @@ def eda(df):
         
         df=pd.read_csv(path)
         
-        st.write(df.columns)
+        #st.write(df.columns)
         
-        hue = st.text_input('Please Specify a hue')
+        hue = st.selectbox("Please specify a hue",df.columns)
         
-        a = st.text_input('Please Specify a name attribute, the name will be used to label the data axis.')
+        a = st.selectbox("Please Specify a name attribute, the name will be used to label the data axis.",df.columns)
+    
         
         if st.sidebar.button('Visualize'):
         
@@ -920,168 +955,345 @@ def eda(df):
             
             return
         
+        
+    
+    
+        
 
         
-def machinelearning(df):
+def linear_reg():
     
-    ml_options=['Linear Regression','Classification']
+    #ml_options=['Linear Regression','Classification']
     
-    ml_select = st.sidebar.radio('Choose a Method depending upon your data',ml_options)
+    #ml_select = st.sidebar.radio('Choose a Method depending upon your data',ml_options)
     
-    if ml_select == 'Linear Regression':
+    #if ml_select == 'Linear Regression':
         
+    df=pd.read_csv(path)
+
+    col_name = st.selectbox("Please Enter the name of column to predict",df.columns)
+
+
+    #pred=int(st.text_input("Enter the value"))
+
+    if st.sidebar.checkbox("Build"):
+
         df=pd.read_csv(path)
+        df1=pd.read_csv(path1)
+
+
+        y=df[col_name]
+        y1=y
+
+        df=df.drop([col_name], axis = 1)
+        df1=df1.drop([col_name], axis = 1)
+
+        x=df
+
+        x_train, x_test, y_train, y_test = train_test_split(x,y, test_size = 0.3,random_state = 1)
+
+
+
+        regressor = LinearRegression()
+        regressor.fit(x_train,y_train)
+
+
+
+
+
+        st.write("Model Build Successfully")
+
+        st.write("Please play with the sliders to give input")
+
+        l=[]
+
+        for i in df1:
+
+            l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
+
+
+
+
+        rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
+
+        rs=st.sidebar.radio("How did you scaled your data?",rescale)
+
+        if rs == 'Min Max Scaler':
+
+
+            scaler = MinMaxScaler() # default min and max values are 0 and 1, respectively
+
+            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
+
+            new_data=np.array(l)
+            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+
+            if st.button("Predict"):
+
+
+
+                y_pred = regressor.predict(scaled_data.T)
+                np.set_printoptions(precision=3)
+                orig_data = scaler.inverse_transform([y_pred])
+
+                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
+
+
+
+
+
+
+        if rs == 'Standard Scaler':
+
+            scaler = StandardScaler()
+            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
+            new_data=np.array(l)
+            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+
+            if st.button("predict"):
+
+
+
+                y_pred = regressor.predict(scaled_data.T)
+                np.set_printoptions(precision=3)
+                orig_data = scaler.inverse_transform([y_pred])
+
+                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
+
+
+
+        if rs == 'Max Absolute Scaler':
+
+            scaler = MaxAbsScaler()
+            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
+            new_data=np.array(l)
+            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+
+            if st.button("predict"):
+
+
+
+                y_pred = regressor.predict(scaled_data.T)
+                np.set_printoptions(precision=3)
+                orig_data = scaler.inverse_transform([y_pred])
+
+                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
+
+
+
+        if rs == 'Robust Scaler':
+
+            scaler = RobustScaler()
+            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
+            new_data=np.array(l)
+            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+
+            if st.button("predict"):
+
+
+
+                y_pred = regressor.predict(scaled_data.T)
+                np.set_printoptions(precision=3)
+                orig_data = scaler.inverse_transform([y_pred])
+
+                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
+
+
+
+
+        if rs == 'None':
+
+
+
+
+
+
+            if st.button("Predict."):
+
+
+                y_pred = regressor.predict([l])
+                np.set_printoptions(precision=3)
+                #orig_data = scaler.inverse_transform([y_pred])
+
+                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
+
+
+        st.sidebar.write("Happy with your model?")
+        #st.sidebar.write("Download it ↓")
+
+        if st.sidebar.button("Download it ↓"):
+            Pkl_Filename = "Model.pkl"  
+
+            with open(Pkl_Filename, 'wb') as file: 
+                pickle.dump(regressor, file)
+
+            st.sidebar.markdown(get_binary_file_downloader_html('Model.pkl', 'Model'), unsafe_allow_html=True)
+
+
+
+                
+def knn_classifier():
+    df=pd.read_csv(path)
+
+    col_name = st.selectbox("Please Enter the name of column to predict",df.columns)
+
+    #st.write(df.columns)
+    
+    cv=st.sidebar.checkbox("Run with CV")
+    
+    if st.sidebar.checkbox("Analyze Optimal K & Build"):
         
-        col_name = st.text_input("Please Enter the name of column to predict")
-        
-        st.write(df.columns)
-        
-        
-        #pred=int(st.text_input("Enter the value"))
-        
-        if st.sidebar.checkbox("Build"):
+        if cv==True:
             
+        
             df=pd.read_csv(path)
             df1=pd.read_csv(path1)
-           
-            
-            y=df[col_name]
+
+
+            y=df1[col_name]
             y1=y
 
             df=df.drop([col_name], axis = 1)
+            df1=df1.drop([col_name], axis = 1)
+
+            x=df
+
+            x_train, x_test, y_train, y_test = train_test_split(x,y, test_size = 0.3,random_state = 1)
+
+            mylist = list(range(0,50))
+
+            neighbors = list(filter(lambda x : x%2!=0, mylist))
+
+            cv_scores = []
+            for k in neighbors:
+                knn = KNeighborsClassifier(n_neighbors=k)
+                scores = cross_val_score(knn,x_train,y_train,cv=10, scoring='accuracy')
+                cv_scores.append(scores.mean())
+
+            MSE = [1-x for x in cv_scores]
+
+            optimal_k = neighbors[MSE.index(min(MSE))]
+            st.write('\n The optimal number of neighbors are: ', optimal_k)
+
+            #fig, ax = plt.subplots()
+            fig=plt.plot(neighbors,MSE)
+            fig=plt.xlabel('Number of neighbors')
+            fig=plt.ylabel('Misclassification Error')
+            st.pyplot()
+
+            knn_optimal = KNeighborsClassifier(n_neighbors=optimal_k)
+            knn_optimal.fit(x_train,y_train)
+            pred = knn_optimal.predict(x_test)
+            acc = accuracy_score(y_test,pred)*100
+            st.write('The accuracy with KNN', optimal_k, 'we are getting: ', acc)
+
+            st.write("Please play with the sliders to give input")
+
+            l=[]
+
+            for i in df1:
+
+                l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
+
+
+            if st.button("Predict."):
+                y_pred = knn_optimal.predict([l])
+                np.set_printoptions(precision=3)
+                #orig_data = scaler.inverse_transform([y_pred])
+
+                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
+                #st.write("Means Dead")
+                
+                
+        if cv == False:
+            df=pd.read_csv(path)
+            df1=pd.read_csv(path1)
+
+
+            y=df1[col_name]
+            y1=y
+
+            df=df.drop([col_name], axis = 1)
+            df1=df1.drop([col_name], axis = 1)
 
             x=df
             
-            x_train, x_test, y_train, y_test = train_test_split(x,y, test_size = 0.3,random_state = 1)
+            x_1, x_test, y_1, y_test = train_test_split(x,y, test_size=0.3, random_state=0)
+            x_train, x_cv, y_train, y_cv = train_test_split(x_1,y_1,test_size=0.3,random_state=0)
             
+            a=0
             
+            for i in range(1,30,2):
+                knn = KNeighborsClassifier(n_neighbors=i)
+                knn.fit(x_train,y_train)
+                pred = knn.predict(x_cv)
+                acc = accuracy_score(y_cv,pred,normalize=True)*float(100)
+                if a<acc:
+                    a=acc
+                    k=i
+                    
+            st.info("Best accuracy we are getting is {} with {} neighbor".format(a,k))
+                    
+            knn = KNeighborsClassifier(n_neighbors=k)
+            knn.fit(x_train,y_train)
+            pred = knn.predict(x_test)
+            acc = accuracy_score(y_test,pred, normalize=True)*float(100)
+            st.info('Test data accuracy for k = {} is {}'.format(k,acc))
             
-            regressor = LinearRegression()
-            regressor.fit(x_train,y_train)
-            
-            
-            
-             
-            
-            st.write("Model Build Successfully")
-            
-            st.write("Please play with the sliders to give input")
-            
+            st.info("Please play with the sliders to give input")
+
             l=[]
+
+            for i in df1:
+
+                l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
+
+
+            if st.button("Predict."):
+                y_pred = knn.predict([l])
+                np.set_printoptions(precision=3)
+                #orig_data = scaler.inverse_transform([y_pred])
+
+                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
+                
             
-            for i in x:
-                
-                l.append(st.sidebar.slider('{}'.format(i),0,100,1))
-                
-            
-                
-                
-            rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
-
-            rs=st.sidebar.radio("How did you scaled your data?",rescale)
-
-            if rs == 'Min Max Scaler':
-                
-                
-                scaler = MinMaxScaler() # default min and max values are 0 and 1, respectively
-            
-                scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
-                
-                new_data=np.array(l)
-                scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
-                
-                if st.button("Predict"):
-                    
-                
-                
-                    y_pred = regressor.predict(scaled_data.T)
-                    np.set_printoptions(precision=3)
-                    orig_data = scaler.inverse_transform([y_pred])
-
-                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
-
             
                 
-                
-
-                
-            if rs == 'Standard Scaler':
-                
-                scaler = StandardScaler()
-                scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
-                new_data=np.array(l)
-                scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
-                
-                if st.button("predict"):
-                    
-                
-                
-                    y_pred = regressor.predict(scaled_data.T)
-                    np.set_printoptions(precision=3)
-                    orig_data = scaler.inverse_transform([y_pred])
-
-                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
-                    
-
-                
-            if rs == 'Max Absolute Scaler':
-                
-                scaler = MaxAbsScaler()
-                scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
-                new_data=np.array(l)
-                scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
-                
-                if st.button("predict"):
-                    
-                
-                
-                    y_pred = regressor.predict(scaled_data.T)
-                    np.set_printoptions(precision=3)
-                    orig_data = scaler.inverse_transform([y_pred])
-
-                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
-                    
-
-                
-            if rs == 'Robust Scaler':
-                
-                scaler = RobustScaler()
-                scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
-                new_data=np.array(l)
-                scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
-                
-                if st.button("predict"):
-                    
-                
-                
-                    y_pred = regressor.predict(scaled_data.T)
-                    np.set_printoptions(precision=3)
-                    orig_data = scaler.inverse_transform([y_pred])
-
-                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
-                    
-
-                    
-                    
-            if rs == 'None':
 
             
-
             
-                
-                        
-                if st.button("Predict."):
-
-
-                    y_pred = regressor.predict([l])
-                    np.set_printoptions(precision=3)
-                    #orig_data = scaler.inverse_transform([y_pred])
-
-                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
 
 
 
-                
+
+
+def ml_options():
+    ml_option_list = ["Linear Regression","Classification"]
+    
+    cl_option_list = ["Knn Classifier","Naive Bayes"]
+    
+    ml_option_select = st.sidebar.radio("Select the machine learning method",ml_option_list)
+    
+    if ml_option_select == "Linear Regression":
+        return ml_option_select
+    
+    if ml_option_select == "Classification":
+        
+        cl_option_select = st.sidebar.radio("Select the Classification method",cl_option_list)
+        
+        if cl_option_select == "Knn Classifier":
+            return cl_option_select
+        
+        if cl_option_select == "Naive Bayes":
+            st.write("You have not unlocked this achivement yet ")
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("Just kidding This section will be build soon")
+        
+        
             
             
             
@@ -1102,9 +1314,34 @@ def main_option():
     try:
         
     
-        option=('Missing Value Treatment', 'Outlier Treatment', 'Feature Scaling')
+        option=('Missing Value Treatment', 'Outlier Treatment', 'Feature Scaling','Drop Columns')
 
         option_select = st.sidebar.radio('What would you like to do?',option)
+        
+        if option_select == "Drop Columns":
+
+            
+            df = pd.read_csv(path)
+            
+            st.write(df)
+            
+            col = col = df.columns.tolist()
+            
+            ch_col = st.multiselect("Please select Columns to drop",col)
+            
+            if st.button("Drop"):
+                
+                df = df.drop(ch_col, axis = 1)
+                
+                df.to_csv(path, index=False)
+                df.to_csv(path1, index=False)
+                
+                st.write("Columns Dropped")
+                
+                st.write("Updated Dataframe")
+                
+                st.write(df)
+                
 
         return option_select
 
@@ -1155,7 +1392,17 @@ def main():
     
         df = file_upload()
         
-        machinelearning(df)
+        ml_option = ml_options()
+        
+        if ml_option == "Linear Regression":
+            
+            linear_reg()
+            
+        if ml_option == "Knn Classifier":
+            knn_classifier()
+            
+            
+            
 
 
 
