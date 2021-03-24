@@ -34,6 +34,13 @@ from sklearn.preprocessing import MaxAbsScaler
 
 from sklearn.preprocessing import RobustScaler
 
+from sklearn.naive_bayes import GaussianNB
+
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.model_selection import GridSearchCV
+
+
 import pickle
 
 #from sklearn.model_selection import train_test_split
@@ -44,7 +51,7 @@ from collections import Counter
 from sklearn.metrics import accuracy_score
 from sklearn import model_selection
 
-
+from sklearn.preprocessing import LabelEncoder
 
 
 
@@ -449,6 +456,17 @@ def maxabs(df):
     except Exception as e:
         st.write("Oops!", e.__class__, "occurred.")
         return df
+    
+    
+    
+# Label Encoding
+
+def label_encode():
+    
+    
+    labelencoder = LabelEncoder()
+    
+    df['Bridge_Types_Cat'] = labelencoder.fit_transform(df['Bridge_Types'])
 
 
     
@@ -983,7 +1001,7 @@ def linear_reg():
 
 
         y=df[col_name]
-        y1=y
+        y1=df1[col_name]
 
         df=df.drop([col_name], axis = 1)
         df1=df1.drop([col_name], axis = 1)
@@ -1015,28 +1033,37 @@ def linear_reg():
 
 
         rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
-
+        
+    
         rs=st.sidebar.radio("How did you scaled your data?",rescale)
 
         if rs == 'Min Max Scaler':
 
 
-            scaler = MinMaxScaler() # default min and max values are 0 and 1, respectively
-
-            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
-
+            scaler = MinMaxScaler()# default min and max values are 0 and 1, respectivel
+            new_scaler = MinMaxScaler()
+            scaler.fit(df1.values)
+            y1=np.array(y1)
+            new_scaler.fit(y1.reshape(-1,1))
+            
             new_data=np.array(l)
-            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+            scaled_data = scaler.transform([new_data])
+            st.write(scaled_data)
 
-            if st.button("Predict"):
+            if st.button("predict"):
 
 
 
-                y_pred = regressor.predict(scaled_data.T)
-                np.set_printoptions(precision=3)
-                orig_data = scaler.inverse_transform([y_pred])
+                y_pred = regressor.predict(scaled_data)
+                st.write(y_pred)
+                y_pred = np.array(y_pred)
+                #np.set_printoptions(precision=3)
+                orig_data = new_scaler.inverse_transform(y_pred.reshape(-1,1))
 
                 st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
+
+
+            
 
 
 
@@ -1044,80 +1071,92 @@ def linear_reg():
 
 
         if rs == 'Standard Scaler':
-
+            
             scaler = StandardScaler()
-            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
+            new_scaler = StandardScaler()
+            scaler.fit(df1.values)
+            y1=np.array(y1)
+            new_scaler.fit(y1.reshape(-1,1))
+            
             new_data=np.array(l)
-            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+            scaled_data = scaler.transform([new_data])
+            st.write(scaled_data)
 
             if st.button("predict"):
 
 
 
-                y_pred = regressor.predict(scaled_data.T)
-                np.set_printoptions(precision=3)
-                orig_data = scaler.inverse_transform([y_pred])
+                y_pred = regressor.predict(scaled_data)
+                st.write(y_pred)
+                y_pred = np.array(y_pred)
+                #np.set_printoptions(precision=3)
+                orig_data = new_scaler.inverse_transform(y_pred.reshape(-1,1))
 
                 st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
+
 
 
 
         if rs == 'Max Absolute Scaler':
 
             scaler = MaxAbsScaler()
-            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
+            new_scaler =MaxAbsScaler()
+            scaler.fit(df1.values)
+            y1=np.array(y1)
+            new_scaler.fit(y1.reshape(-1,1))
+            
             new_data=np.array(l)
-            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+            scaled_data = scaler.transform([new_data])
+            st.write(scaled_data)
 
             if st.button("predict"):
 
 
 
-                y_pred = regressor.predict(scaled_data.T)
-                np.set_printoptions(precision=3)
-                orig_data = scaler.inverse_transform([y_pred])
+                y_pred = regressor.predict(scaled_data)
+                st.write(y_pred)
+                y_pred = np.array(y_pred)
+                #np.set_printoptions(precision=3)
+                orig_data = new_scaler.inverse_transform(y_pred.reshape(-1,1))
 
                 st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
 
 
+            
 
         if rs == 'Robust Scaler':
 
             scaler = RobustScaler()
-            scaled_data = scaler.fit_transform(y1.values.reshape(-1,1))
+            new_scaler = RobustScaler()
+            scaler.fit(df1.values)
+            y1=np.array(y1)
+            new_scaler.fit(y1.reshape(-1,1))
+            
             new_data=np.array(l)
-            scaled_data = scaler.fit_transform(new_data.reshape(-1,1))
+            scaled_data = scaler.transform([new_data])
+            st.write(scaled_data)
 
             if st.button("predict"):
 
 
 
-                y_pred = regressor.predict(scaled_data.T)
-                np.set_printoptions(precision=3)
-                orig_data = scaler.inverse_transform([y_pred])
+                y_pred = regressor.predict(scaled_data)
+                st.write(y_pred)
+                y_pred = np.array(y_pred)
+                #np.set_printoptions(precision=3)
+                orig_data = new_scaler.inverse_transform(y_pred.reshape(-1,1))
 
                 st.write("Your Predicted {} is {:.2f} :".format(col_name,float(orig_data)))
 
 
-
-
         if rs == 'None':
-
-
-
-
-
-
-            if st.button("Predict."):
-
-
+            if st.button("Predict. "):
                 y_pred = regressor.predict([l])
-                np.set_printoptions(precision=3)
                 #orig_data = scaler.inverse_transform([y_pred])
 
                 st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
-
-
+    
+        
         st.sidebar.write("Happy with your model?")
         #st.sidebar.write("Download it ↓")
 
@@ -1194,16 +1233,102 @@ def knn_classifier():
             for i in df1:
 
                 l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
-
-
-            if st.button("Predict."):
-                y_pred = knn_optimal.predict([l])
-                np.set_printoptions(precision=3)
-                #orig_data = scaler.inverse_transform([y_pred])
-
-                st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
-                #st.write("Means Dead")
                 
+                
+            rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
+
+
+            rs=st.sidebar.radio("How did you scaled your data? ",rescale)
+
+            if rs == 'Min Max Scaler':
+
+
+                scaler = MinMaxScaler() # default min and max values are 0 and 1, respectivel
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn_optimal.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Standard Scaler':
+
+                scaler = StandardScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn_optimal.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Max Absolute Scaler':
+
+                scaler = MaxAbsScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn_optimal.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+            if rs == 'Robust Scaler':
+
+                scaler = RobustScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+                st.write(scaled_data)
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn_optimal.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+            if rs == 'None':
+                if st.button("Predict."):
+                    y_pred = knn_optimal.predict([l])
+                    #orig_data = scaler.inverse_transform([y_pred])
+
+                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
+
+
                 
         if cv == False:
             df=pd.read_csv(path)
@@ -1247,22 +1372,610 @@ def knn_classifier():
             for i in df1:
 
                 l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
+                
+            rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
 
 
+            rs=st.sidebar.radio("How did you scaled your data?",rescale)
+
+            if rs == 'Min Max Scaler':
+
+
+                scaler = MinMaxScaler() # default min and max values are 0 and 1, respectivel
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Standard Scaler':
+
+                scaler = StandardScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Max Absolute Scaler':
+
+                scaler = MaxAbsScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+            if rs == 'Robust Scaler':
+
+                scaler = RobustScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+                st.write(scaled_data)
+
+
+                if st.button("predict"):
+
+
+                    y_pred = knn.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+            if rs == 'None':
+                if st.button("Predict. "):
+                    y_pred = knn.predict([l])
+                    #orig_data = scaler.inverse_transform([y_pred])
+
+                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
+
+
+                
+
+            
+def naive_bayes():
+    df=pd.read_csv(path)
+
+    col_name = st.selectbox("Please Enter the name of column to predict",df.columns)
+    
+    df1=pd.read_csv(path1)
+    
+    nb_type=["Gaussian NB", "Binomial NB","Multinomial NB"]
+    
+    nb_select = st.sidebar.radio("Which Algorithm will be best for your data",nb_type)
+    
+    
+    if st.sidebar.checkbox("Run Naive Bayes"):
+        
+        
+        
+        
+        
+
+        
+
+
+        y=df1[col_name]
+        y1=y
+
+        df=df.drop([col_name], axis = 1)
+        df1=df1.drop([col_name], axis = 1)
+
+        x=df
+
+        X_train, X_test, y_train, y_test = train_test_split(x,y, test_size = 0.3,random_state = 1)
+
+
+        var_smooth = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10]
+
+
+        if nb_select =="Gaussian NB":
+            
+
+
+
+            cv_scores = []
+            for vs in var_smooth:
+                nbg = GaussianNB(var_smoothing=vs)
+                scores = cross_val_score(nbg,X_train,y_train,cv=10,scoring='accuracy')
+                cv_scores.append(scores.mean())
+
+            MSE = [1-x for x in cv_scores]
+            optimal_vs = var_smooth[MSE.index(min(MSE))]
+            
+            st.sidebar.info("Adjust the var smoothing and see the accuracy")
+            
+            optimal_vs=st.sidebar.slider("Var Smoothing",0.0,1.0,0.0)
+
+
+            nbg_optimal = GaussianNB(var_smoothing=optimal_vs)
+            nbg_optimal.fit(X_train,y_train)
+            y_pred = nbg_optimal.predict(X_test) 
+            acc = accuracy_score(y_test,y_pred)
+            
+            acc=acc*100
+
+            st.write("Best Accuracy we are getting is {:.2f} with Var Smoothing at {}".format(acc,optimal_vs))
+
+            st.success("Accuracy {}".format(acc))
+            
+            st.warning("Don't believe us, see it for youself")
+            
+            
+            st.sidebar.write("")
+            st.sidebar.write("")
+            
+            st.sidebar.info("After adjusting the accuracy please play with sliders to give input")
+            
+            l=[]
+            
+
+            for i in df1:
+
+                l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
+                
+            
+                
+                
+        rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
+        
+    
+        rs=st.sidebar.radio("How did you scaled your data?",rescale)
+
+        if rs == 'Min Max Scaler':
+
+
+            scaler = MinMaxScaler() # default min and max values are 0 and 1, respectivel
+            scaler.fit(df1)
+            
+            
+
+            new_data=np.array(l)
+            scaled_data = scaler.transform([new_data])
+            
+
+            if st.button("predict"):
+
+
+                y_pred = nbg_optimal.predict(scaled_data)
+                st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+        if rs == 'Standard Scaler':
+            
+            scaler = StandardScaler()
+            scaler.fit(df1)
+            
+            
+
+            new_data=np.array(l)
+            scaled_data = scaler.transform([new_data])
+            
+
+            if st.button("predict"):
+
+
+                y_pred = nbg_optimal.predict(scaled_data)
+                st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+                
+
+
+
+        if rs == 'Max Absolute Scaler':
+
+            scaler = MaxAbsScaler()
+            scaler.fit(df1)
+            
+            
+
+            new_data=np.array(l)
+            scaled_data = scaler.transform([new_data])
+            
+
+            if st.button("predict"):
+
+
+                y_pred = nbg_optimal.predict(scaled_data)
+                st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+        if rs == 'Robust Scaler':
+
+            scaler = RobustScaler()
+            scaler.fit(df1)
+            
+            
+
+            new_data=np.array(l)
+            scaled_data = scaler.transform([new_data])
+            st.write(scaled_data)
+            
+
+            if st.button("predict"):
+
+
+                y_pred = nbg_optimal.predict(scaled_data)
+                st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+        if rs == 'None':
             if st.button("Predict."):
-                y_pred = knn.predict([l])
-                np.set_printoptions(precision=3)
+                y_pred = nbg_optimal.predict([l])
                 #orig_data = scaler.inverse_transform([y_pred])
 
                 st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
                 
+    if nb_select == "Binomial NB":
+        st.info("We only have Gaussian NB at the Moment")
+        
+    if nb_select == "Multinomial NB":
+        st.info("We only have Gaussian NB at the Moment ")
+        
+        
+        
+def logistic_regression():
+    df=pd.read_csv(path)
+    
+    df1=pd.read_csv(path1)
+    
+
+    col_name = st.selectbox("Please Enter the name of column to predict",df.columns)
+    
+    settings_option = ['Default Settings','Custom Settings']
+
+    
+    settings_select = st.sidebar.radio("How do you want to Run the Model ?",settings_option)
+    
+    if settings_select == 'Default Settings':
+        
+        if st.sidebar.checkbox("Run Logistic Regression"):
             
+            df=pd.read_csv(path)
+    
+            df1=pd.read_csv(path1)
+        
+    
+            y=df1[col_name]
+
+            y1=y
+
+            df=df.drop([col_name], axis = 1)
+            df1=df1.drop([col_name], axis = 1)
+
+            x=df
+
+            X_train, X_test, y_train, y_test = train_test_split(x,y, test_size = 0.3,random_state = 1)
+
+            clf = LogisticRegression()
+            clf.fit(X_train, y_train)
+
+            score = clf.score(X_test, y_test)
+            st.write('The Accuracy we are getting is {}'.format(score*100))
             
+            st.sidebar.info("please play with sliders to give input")
+            
+            l=[]
+            
+
+            for i in df1:
+
+                l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
                 
+            rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
+        
+    
+            rs=st.sidebar.radio("How did you scaled your data?",rescale)
 
+            if rs == 'Min Max Scaler':
+
+
+                scaler = MinMaxScaler() # default min and max values are 0 and 1, respectivel
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Standard Scaler':
+
+                scaler = StandardScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Max Absolute Scaler':
+
+                scaler = MaxAbsScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+            if rs == 'Robust Scaler':
+
+                scaler = RobustScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+                st.write(scaled_data)
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+            if rs == 'None':
+                if st.button("Predict."):
+                    y_pred = clf.predict([l])
+                    #orig_data = scaler.inverse_transform([y_pred])
+
+                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
+                    
+                    
+    
+    
+    
+    if settings_select == 'Custom Settings':
+        if st.sidebar.button('Want our predictions on your data'):
+        
+            df=pd.read_csv(path)
+
+            df1=pd.read_csv(path1)
+
+            y=df1[col_name]
+
+            y1=y
+
+            df=df.drop([col_name], axis = 1)
+            df1=df1.drop([col_name], axis = 1)
+
+            x=df
+
+            X_train, X_test, y_train, y_test = train_test_split(x,y, train_size=.9)
+
+            tuned_parameters = [{'C': [10**-4, 10**-2, 10**0, 10**2, 10**4]}]
+
+            model = GridSearchCV(LogisticRegression(), tuned_parameters, scoring = 'f1', cv=5)
+            model.fit(X_train, y_train)
+
+            st.info('The Best C would be {}'.format(model.best_estimator_))
+            st.info('With the Score of {}'.format(model.score(X_test, y_test) * 100))
             
+        st.sidebar.write('Please provide inputs')
+
+        c_values = [0.001 , 0.01, 1, 100, 10000]
+
+        c = st.sidebar.selectbox('The Value of C',c_values)
+
+        penalty_options = ['none','l1', 'l2', 'elasticnet' ]
+
+        penalty=st.sidebar.selectbox('How would you like to penalize the model',penalty_options)
+
+        solver_options=[ 'lbfgs','newton-cg', 'liblinear', 'sag', 'saga']
+
+        solver = st.sidebar.selectbox('What solver would you like to use',solver_options)
+
+
+        if st.sidebar.checkbox('Run with Custom Settings'):
+            
+            df=pd.read_csv(path)
+    
+            df1=pd.read_csv(path1)
+        
+            y=df1[col_name]
+
+            y1=y
+
+            df=df.drop([col_name], axis = 1)
+            df1=df1.drop([col_name], axis = 1)
+
+            x=df
+
+            X_train, X_test, y_train, y_test = train_test_split(x,y, test_size = 0.3,random_state = 1)
+            
+            clf = LogisticRegression(C=float(c), penalty=penalty, solver = solver) 
+            
+            clf.fit(X_train, y_train)
+
+            score = clf.score(X_test, y_test)
+            st.write('The Accuracy we are getting is {}'.format(score*100))
+            
+            st.sidebar.info("please play with sliders to give input")
+            
+            l=[]
             
 
+            for i in df1:
+
+                l.append(st.sidebar.slider('{}'.format(i),min(df1[i]),max(df1[i]),min(df1[i])))
+                
+            rescale=['None','Min Max Scaler','Standard Scaler','Max Absolute Scaler','Robust Scaler']
+        
+    
+            rs=st.sidebar.radio("How did you scaled your data?",rescale)
+
+            if rs == 'Min Max Scaler':
+
+
+                scaler = MinMaxScaler() # default min and max values are 0 and 1, respectivel
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Standard Scaler':
+
+                scaler = StandardScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+
+
+            if rs == 'Max Absolute Scaler':
+
+                scaler = MaxAbsScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+
+            if rs == 'Robust Scaler':
+
+                scaler = RobustScaler()
+                scaler.fit(df1)
+
+
+
+                new_data=np.array(l)
+                scaled_data = scaler.transform([new_data])
+                st.write(scaled_data)
+
+
+                if st.button("predict"):
+
+
+                    y_pred = clf.predict(scaled_data)
+                    st.write("Your Predicted {} is {} :".format(col_name,y_pred))
+
+
+            if rs == 'None':
+                if st.button("Predict."):
+                    y_pred = clf.predict([l])
+                    #orig_data = scaler.inverse_transform([y_pred])
+
+                    st.write("Your Predicted {} is {:.2f} :".format(col_name,float(y_pred)))
+                    
+            
+                    
+                    
+
+
+
+
+        
+                
 
 
 
@@ -1270,7 +1983,7 @@ def knn_classifier():
 def ml_options():
     ml_option_list = ["Linear Regression","Classification"]
     
-    cl_option_list = ["Knn Classifier","Naive Bayes"]
+    cl_option_list = ["Knn Classifier","Naive Bayes","Logistic Regression"]
     
     ml_option_select = st.sidebar.radio("Select the machine learning method",ml_option_list)
     
@@ -1285,16 +1998,10 @@ def ml_options():
             return cl_option_select
         
         if cl_option_select == "Naive Bayes":
-            st.write("You have not unlocked this achivement yet ")
-            st.write("")
-            st.write("")
-            st.write("")
-            st.write("")
-            st.write("")
-            st.write("Just kidding This section will be build soon")
-        
-        
+            return cl_option_select
             
+        if cl_option_select == "Logistic Regression":
+            return cl_option_select
             
             
         
@@ -1400,6 +2107,11 @@ def main():
             
         if ml_option == "Knn Classifier":
             knn_classifier()
+            
+        if ml_option =="Naive Bayes":
+            naive_bayes()
+        if ml_option == "Logistic Regression":
+            logistic_regression()
             
             
             
